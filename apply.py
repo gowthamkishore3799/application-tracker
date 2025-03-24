@@ -36,7 +36,7 @@ class OutputList(BaseModel):
 client = OpenAI(
     api_key=os.environ.get("OPENAI_API_KEY"),
 )
-notion = Client(auth="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")
+notion = Client(auth=os.environ.get("NOTION_API_KEY"))
 
 def find_job_posting(job_posting):
     retrieved_content = {}

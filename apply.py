@@ -183,9 +183,3 @@ def apply(url, doc_url):
 
     createApplication(posting)
     integrateIntoNotion(posting)
-
-        
-
-
-
-apply("https://job-boards.greenhouse.io/blend/jobs/5421477004?gh_src=b6a979884us", "https://docs.google.com/document/d/1-Gmy2eJSfG0BPUkSi96xc88WXOodNdwTEKhV1tjb6nA/edit?tab=t.0")

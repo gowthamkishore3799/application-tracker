@@ -12,6 +12,7 @@ import uuid
 import shutil
 from datetime import datetime
 from notion_client import Client
+import sys
 
 load_dotenv()
 
@@ -59,6 +60,7 @@ def find_job_posting(job_posting):
                     retrieved_content[content.type] = content.text
                 
                 if content.type == "complete":
+                    logger.info(retrieved_content)
                     return retrieved_content
         except Exception as e:
             print(e)
@@ -182,6 +184,10 @@ def apply(url, doc_url):
     posting = extract(url)
     posting["url"] = url;
     posting["doc_url"] = doc_url
-
     createApplication(posting)
     integrateIntoNotion(posting)
+
+
+job_url = sys.argv[1]
+doc_url = sys.argv[2]
+apply(job_url, doc_url)

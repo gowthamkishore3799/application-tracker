@@ -45,7 +45,7 @@ def find_job_posting(job_posting):
             completion = client.beta.chat.completions.parse(
                 model="gpt-4o-mini",
                 messages=[
-                    {"role": "system", "content": "You are a helpful job assistant, helping me in extracting some metadata from job posting such as job_description, salary, location, job_title,company_name, job_qualifications, job_id, important_information(if any), project(ill be working if provided) \n\nif you find any other information, return the type as '''other'''. Dont exaggerate, just return the text provided from job posting. \n\nif the information is already extracted or processed, skip returning it and return the type as other. \nIf types is other, text can be returned as N/A.\nDont be returning same information twice, and return the type as other. \n\nRepeating once again\n1. Collect job_description, salary, location, job_title,company_name, job_qualifications, job_id, important_information(if any), project(ill be working if provided)  \n\n2. All these should be given as type and text should contain the information extracted\n\n3.If the information is already extracted, return the type as other and text as N/A "},
+                    {"role": "system", "content": "You are a helpful job assistant, helping me in extracting some metadata from job posting such as job_description, salary, location, job_title,company_name, job_qualifications, job_id, important_information(if any), project(ill be working if provided) \n\nif you find any other information, return the type as '''other'''. Dont exaggerate, just return the text provided from job posting. \n\nif the information is already extracted or processed, skip returning it and return the type as other. \nIf types is other, text can be returned as N/A.\nDont be returning same information twice, and return the type as other. \n\nRepeating once again\n1. Collect job_description, salary, location, job_title,company_name, job_qualifications, job_id, important_information(if any), project(ill be working if provided)  \n\n2. All these should be given as type and text should contain the information extracted\n\n3.If the information is already extracted, return the type as other and text as N/A. If you have retrieved all the content, dont extract just return the type as 'complete'"},
                     {"role": "assistant", "content": f"You have already collected this below information {retrieved_content}"},
                     {"role": "user", "content": str(posting)}
                 ],
@@ -55,9 +55,11 @@ def find_job_posting(job_posting):
             contents = response.responses
 
             for content in contents:
-                print(content)
                 if content.type != "other":
                     retrieved_content[content.type] = content.text
+                
+                if content.type == "complete":
+                    return retrieved_content
         except Exception as e:
             print(e)
     return retrieved_content;
@@ -69,7 +71,7 @@ def extract(url):
         soup = BeautifulSoup(response.content, 'html.parser')
         for tag in soup.find_all(["aside", "header", "footer", "nav", "script", "style", "img", "time", "iframe", "input", "table"]):
             tag.decompose()
-        job_posting = soup.find_all("div")
+        job_posting = soup.find_all("div") + [soup.title]
         content = find_job_posting(job_posting)
         return content
     except:
@@ -110,7 +112,7 @@ def integrateIntoNotion(posting):
             "rich_text": [
                 {
                     "text": {
-                        "content": posting["salary"]
+                        "content": posting.get("salary", "N/A")
                     }
                 }
             ]
@@ -159,7 +161,7 @@ def integrateIntoNotion(posting):
             "rich_text": [
                 {
                     "text": {
-                        "content": posting["job_id"]
+                        "content": posting.get("job_id", "N/A")
                     }
                 }
             ]

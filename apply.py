@@ -71,9 +71,12 @@ def extract(url):
     try:
         response = requests.get(url)
         soup = BeautifulSoup(response.content, 'html.parser')
-        for tag in soup.find_all(["aside", "header", "footer", "nav", "script", "style", "img", "time", "iframe", "input", "table"]):
+        for tag in soup.find_all(["aside", "footer", "nav", "script", "style", "img", "time", "iframe", "input", "table"]):
             tag.decompose()
-        job_posting = soup.find_all("div") + [soup.title]
+        job_posting={}
+        job_posting = soup.find_all()
+
+        job_posting = job_posting + [soup.title]
         content = find_job_posting(job_posting)
         return content
     except:

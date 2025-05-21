@@ -46,7 +46,7 @@ def find_job_posting(job_posting):
             completion = client.beta.chat.completions.parse(
                 model="gpt-4o-mini",
                 messages=[
-                    {"role": "system", "content": "You are a helpful job assistant, helping me in extracting some metadata from job posting such as job_description, salary, location, job_title,company_name, job_qualifications, job_id, important_information(if any), project(ill be working if provided) \n\nif you find any other information, return the type as '''other'''. Dont exaggerate, just return the text provided from job posting. \n\nif the information is already extracted or processed, skip returning it and return the type as other. \nIf types is other, text can be returned as N/A.\nDont be returning same information twice, and return the type as other. \n\nRepeating once again\n1. Collect job_description, salary, location, job_title,company_name, job_qualifications, job_id, important_information(if any), project(ill be working if provided)  \n\n2. All these should be given as type and text should contain the information extracted\n\n3.If the information is already extracted, return the type as other and text as N/A. If you have retrieved all the content, dont extract just return the type as 'complete'. If the job contains prefered qualifications, append them all in job_qualifications,"},
+                    {"role": "system", "content": "You are a helpful job assistant, helping me in extracting some metadata from job posting such as job_description, salary, location, job_title,company_name, job_qualifications, job_id, important_information(if any), project(ill be working if provided) \n\nif you find any other information, return the type as '''other'''. Dont exaggerate, just return the text provided from job posting. \n\nif the information is already extracted or processed, skip returning it and return the type as other. \nIf types is other, text can be returned as N/A.\nDont be returning same information twice, and return the type as other. \n\nRepeating once again\n1. Collect job_description, salary, location, job_title,company_name, job_qualifications, job_id, important_information(if any), project(ill be working if provided)  \n\n2. All these should be given as type and text should contain the information extracted\n\n3.If the information is already extracted, return the type as other and text as N/A. If you have retrieved all the content, dont extract just return the type as 'complete'. If the job contains prefered qualifications, append them all in job_qualifications, Make sure job_posting length is less than 2000 characters, if more than that, just phrase it accordingly."},
                     {"role": "assistant", "content": f"You have already collected this below information {retrieved_content}"},
                     {"role": "user", "content": str(posting)}
                 ],
@@ -71,7 +71,7 @@ def extract(url):
     try:
         response = requests.get(url)
         soup = BeautifulSoup(response.content, 'html.parser')
-        for tag in soup.find_all(["aside", "footer", "nav", "script", "style", "img", "time", "iframe", "input", "table"]):
+        for tag in soup.find_all(["aside", "footer", "nav", "style", "img", "time", "iframe", "input", "table"]):
             tag.decompose()
         job_posting={}
         job_posting = soup.find_all()
@@ -88,6 +88,10 @@ def integrateIntoNotion(posting):
     today = datetime.today()
 
     formatted_date = today.strftime('%Y-%m-%d')
+
+    description = posting.get("job_description" , "")
+
+    description = description[:2000] if len(description) > 2000 else description
     data_to_insert = {
     "parent": {
         "type": "database_id",
@@ -105,7 +109,7 @@ def integrateIntoNotion(posting):
             "title": [
                 {
                     "text": {
-                        "content": posting["company_name"]
+                        "content": str(posting["company_name"])
                     }
                 }
             ]
@@ -117,7 +121,7 @@ def integrateIntoNotion(posting):
             "rich_text": [
                 {
                     "text": {
-                        "content": posting.get("salary", "N/A")
+                        "content": str(posting.get("salary", "N/A"))
                     }
                 }
             ]
@@ -126,7 +130,7 @@ def integrateIntoNotion(posting):
             "rich_text": [
                 {
                     "text": {
-                        "content": posting["job_qualifications"]
+                        "content": str(posting.get("job_qualifications"), "N/A")
                     }
                 }
             ]
@@ -135,7 +139,7 @@ def integrateIntoNotion(posting):
             "rich_text": [
                 {
                     "text": {
-                        "content": posting["location"]
+                        "content": str(posting["location"])
                     }
                 }
             ]
@@ -144,7 +148,7 @@ def integrateIntoNotion(posting):
             "rich_text": [
                 {
                     "text": {
-                        "content": posting["job_description"]
+                        "content": str(description)
                     }
                 }
             ]
@@ -174,8 +178,6 @@ def integrateIntoNotion(posting):
     }
 }
     response = notion.pages.create(**data_to_insert)
-
-
 def createApplication(posting):
     try:
         dirname = f"{os.environ.get("OUTPUT_DIR")}{posting.company}-{posting.job_title.replace(' ', '-').lower()}-{uuid.uuid4()}"

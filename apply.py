@@ -13,6 +13,7 @@ import shutil
 from datetime import datetime
 from notion_client import Client
 import sys
+import re
 
 load_dotenv()
 
@@ -85,6 +86,7 @@ def extract(url):
     return ""
 
 def integrateIntoNotion(posting):
+
     today = datetime.today()
 
     formatted_date = today.strftime('%Y-%m-%d')
@@ -92,6 +94,8 @@ def integrateIntoNotion(posting):
     description = posting.get("job_description" , "")
 
     description = description[:2000] if len(description) > 2000 else description
+    role = posting.get("job_title", "Software Engineer")
+    role = re.sub(r"[,\?!:]", "", role)
     data_to_insert = {
     "parent": {
         "type": "database_id",
@@ -101,7 +105,7 @@ def integrateIntoNotion(posting):
         "Position": {
             "multi_select": [
                 {
-                    "name": posting["job_title"]
+                    "name": role
                 }
             ]
         },
@@ -130,7 +134,7 @@ def integrateIntoNotion(posting):
             "rich_text": [
                 {
                     "text": {
-                        "content": str(posting.get("job_qualifications"), "N/A")
+                        "content": str(posting.get("job_qualifications", "N/A") )
                     }
                 }
             ]
@@ -178,6 +182,7 @@ def integrateIntoNotion(posting):
     }
 }
     response = notion.pages.create(**data_to_insert)
+
 def createApplication(posting):
     try:
         dirname = f"{os.environ.get("OUTPUT_DIR")}{posting.company}-{posting.job_title.replace(' ', '-').lower()}-{uuid.uuid4()}"

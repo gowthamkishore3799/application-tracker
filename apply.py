@@ -143,7 +143,7 @@ def integrateIntoNotion(posting):
             "rich_text": [
                 {
                     "text": {
-                        "content": str(posting["location"])
+                        "content": str(posting.get("location", "N/A"))
                     }
                 }
             ]
